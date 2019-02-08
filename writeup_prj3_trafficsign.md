@@ -16,18 +16,6 @@ The goals / steps of this project are the following:
 * Analyze the softmax probabilities of the new images
 * Summarize the results with a written report
 
-
-[//]: # "Image References"
-
-[image1]: ./examples/visualization.jpg "Visualization"
-[image2]: ./examples/grayscale.jpg "Grayscaling"
-[image3]: ./examples/random_noise.jpg "Random Noise"
-[image4]: ./examples/placeholder.png "Traffic Sign 1"
-[image5]: ./examples/placeholder.png "Traffic Sign 2"
-[image6]: ./examples/placeholder.png "Traffic Sign 3"
-[image7]: ./examples/placeholder.png "Traffic Sign 4"
-[image8]: ./examples/placeholder.png "Traffic Sign 5"
-
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/481/view) individually and describe how I addressed each point in my implementation.  
 
@@ -147,7 +135,7 @@ To train the model, I used below parameters.
 
 ```python
 # Parameters
-EPOCHS = 50
+EPOCHS = 40
 BATCH_SIZE = 128
 
 # Network Parameters
@@ -177,7 +165,7 @@ biases = {
     'out': tf.Variable(tf.zeros([n_classes]))}
 ```
 
-Below are the implementation of my 5-layer LeNet architecture, where `conv2d(x, W, b, strides=1)` is the convolution function with ReLU return while `maxpool2d(x, k=2)` is the max pooling function followed by convolution layer. 
+Below are the implementation of my 5-layer LeNet architecture, where `conv2d(x, W, b, strides=1)` is the convolution function with ReLU return while `maxpool2d(x, k=2)` is the max pooling function following the convolution layer. 
 
 ```python
 def LeNet(x):
@@ -218,10 +206,10 @@ def LeNet(x):
     return logits
 ```
 
-Adam optimizer is used with a learning rate of 0.002. The training pipeline follows the procedure of minimizing loss by calculating the cross entropy. 
+Adam optimizer is used with a learning rate of `0.001`. The training pipeline follows the procedure of minimizing loss by calculating the cross entropy. 
 
 ```python
-rate = 0.002
+rate = 0.001
 
 logits = LeNet(x)
 cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=one_hot_y, logits=logits)
@@ -262,73 +250,109 @@ with tf.Session() as sess:
 
 #### 4. Description of the approach taken for finding the solution.
 
-A validation set accuracy of 0.93 is reached with this model.
+A validation set accuracy of `0.93` is reached using this model.
 
-* training set accuracy of ?
-* validation set accuracy of ? 
-* test set accuracy of ?
+```python
+import tensorflow as tf
 
-If an iterative approach was chosen:
-* What was the first architecture that was tried and why was it chosen?
-* What were some problems with the initial architecture?
-* How was the architecture adjusted and why was it adjusted? Typical adjustments could include choosing a different model architecture, adding or taking away layers (pooling, dropout, convolution, etc), using an activation function or changing the activation function. One common justification for adjusting an architecture would be due to overfitting or underfitting. A high accuracy on the training set but low accuracy on the validation set indicates over fitting; a low accuracy on both sets indicates under fitting.
-* Which parameters were tuned? How were they adjusted and why?
-* What are some of the important design choices and why were they chosen? For example, why might a convolution layer work well with this problem? How might a dropout layer help with creating a successful model?
+save_file = './lenet'
+saver = tf.train.Saver()
 
-If a well known architecture was chosen:
+with tf.Session() as sess:
+    saver.restore(sess, save_file)
+            
+    validation_accuracy = evaluate(X_valid, y_valid)
+    print("Validation Accuracy = {:.3f}".format(validation_accuracy))
+```
 
-LeNet architecture is chosen for this project.
+```
+INFO:tensorflow:Restoring parameters from ./lenet
+Validation Accuracy = 0.930
+```
 
-* What architecture was chosen?
-* Why did you believe it would be relevant to the traffic sign application?
-* How does the final model's accuracy on the training, validation and test set provide evidence that the model is working well?
+
+
+Test set accuracy of `0.922` is achieved.
+
+```python
+with tf.Session() as sess:
+    saver.restore(sess, tf.train.latest_checkpoint('.'))
+
+    test_accuracy = evaluate(X_test, y_test)
+    print("Test Accuracy = {:.3f}".format(test_accuracy))
+```
+
+```
+INFO:tensorflow:Restoring parameters from ./lenet
+Test Accuracy = 0.922
+```
+
+
+
+**Discussion on parameter tuning**
+
+An additional dropout layer is added in this LeNet architecture. Dropout is a simple but powerful regularization technique for neural networks. During training procedures, if neurons are randomly dropped out, the other ones will have to step in and handle the representation required to make predictions for the missing neurons. In this project, the keep probability is tuned as `0.75`.
+
+Besides adding dropout layer, epochs and learning rate are the main parameters being tuned for this training model. More epochs simply means more iteration of the training cycles both forward and backward through entire neural network. The number of epochs have been tuned to avoid overfitting and underfitting. An epoch number of `40 ` is used for this training model.
+
+Generally, high learning rate would result in fast learning at beginning but getting saturated quickly too without further improvement. Small learning rate is used for this training, which tends to find local minima more likely with the sacrifice of training time and epochs. A learning rate of `0.001` is used in this project.
 
 
 
 ### Test the Model on New Images
 
-#### 1. Choose 10 German traffic signs found on the web and provide them in the report. 
+#### 1. Choose 5 German traffic signs found on the web and provide them in the report. 
 
 Here are five German traffic signs that I found on the web:
 
-![alt text][image4] ![alt text][image5] ![alt text][image6] 
-![alt text][image7] ![alt text][image8]
+![test_new_images.png](https://github.com/rcwang128/Udacity_CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_images/test_new_images.png?raw=true)
 
-The first image might be difficult to classify because ...
+New images have been resized and normalized the same way as training set （32x32x1）before feeding into neural network.
 
-#### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set. At a minimum, discuss what the predictions were, the accuracy on these new predictions, and compare the accuracy to the accuracy on the test set (OPTIONAL: Discuss the results in more detail as described in the "Stand Out Suggestions" part of the rubric).
 
-Here are the results of the prediction:
+
+#### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set. 
+
+Here are the results of the prediction of these 5 new images. 
 
 | Image			        |     Prediction	        					|
 |:---------------------:|:---------------------------------------------:|
-| Stop Sign      		| Stop sign   									|
-| U-turn     			| U-turn 										|
-| Yield					| Yield											|
-| 100 km/h	      		| Bumpy Road					 				|
-| Slippery Road			| Slippery Road      							|
+| Road work    |               Road work               |
+|             Priority road             | Priority road |
+| Right-of-way at the next intersection	| Right-of-way at the next intersection	|
+|           Children crossing           |             *Ahead only*              |
+| Yield			| Yield      							|
 
 
-The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. This compares favorably to the accuracy on the test set of ...
+The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. The test sample size is small in this case.
 
-#### 3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
+```Python
+# Correct image classes
+y_test_new_img = [25, 12, 11, 28, 13]
 
-The code for making predictions on my final model is located in the 11th cell of the Ipython notebook.
+with tf.Session() as sess:
+    saver.restore(sess, save_file)
+            
+    test_img_accuracy = evaluate(X_test_new_img, y_test_new_img)
+    print("Test Accuracy = {:.3f}".format(test_img_accuracy))
+```
 
-For the first image, the model is relatively sure that this is a stop sign (probability of 0.6), and the image does contain a stop sign. The top five soft max probabilities were
+```
+INFO:tensorflow:Restoring parameters from ./lenet
+Test Accuracy = 0.800
+```
 
-| Probability         	|     Prediction	        					|
-|:---------------------:|:---------------------------------------------:|
-| .60         			| Stop sign   									|
-| .20     				| U-turn 										|
-| .05					| Yield											|
-| .04	      			| Bumpy Road					 				|
-| .01				    | Slippery Road      							|
+Top 5 softmax probabilities are presented for each images using the `tf.nn.top_k` function.
+
+![new_image_pred.png](https://github.com/rcwang128/Udacity_CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_images/new_image_pred.png?raw=true)
+
+One of the major reason that test image 4 is mis-recognized as "Road work" may due to less number of training sets. "Children crossing" (class#28) has relatively small training samples comparing with others if looking through dataset bar plot. And "Children crossing" sign has quite a few variants and their features are similar as a lot other traffic signs. Those could also contribute to the prediction error.
 
 
-For the second image ... 
 
 ### (Optional) Visualizing the Neural Network (See Step 4 of the Ipython notebook for more details)
-#### 1. Discuss the visual output of your trained network's feature maps. What characteristics did the neural network use to make classifications?
+#### 1. Discuss the visual output of your trained network's feature maps. 
 
+First CNN layer has depth of 6 while 2nd CNN layer has depth of 16. Their feature maps are visualized as images shown below for a given test image.
 
+![featuremap.png](https://github.com/rcwang128/Udacity_CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_images/featuremap.png?raw=true)
